@@ -69,3 +69,23 @@ df['DTS Data'] = df['DTS Data'].apply(clean_text)
 
 # Save cleaned dataset
 df.to_csv('DTS_FileVerification_Cleaned.csv', index=False)
+
+
+def clean_text(text):
+    if pd.isna(text):
+        return text
+    try:
+        text = text.encode('latin1').decode('utf-8')
+    except:
+        pass
+
+    # NEW: Replace weird characters
+    text = re.sub(r'[Ã¢â‚¬"”]+', ' ', text)
+
+    # NEW: Remove 'Description:'
+    text = re.sub(r'Description:\s*', '', text, flags=re.IGNORECASE)
+
+    # NEW: Remove line breaks to make single-line text
+    text = text.replace('\n', ' ').replace('\r', ' ')
+
+    # (rest of your cleaning logic follows...)
