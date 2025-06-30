@@ -1,40 +1,41 @@
 import pandas as pd
 import re
 
-# Load your CSV
-df = pd.read_csv('DTS FileVerification.csv')
+# Load CSV preserving line breaks inside quoted cells (important for email cells)
+df = pd.read_csv('DTS FileVerification.csv', quoting=1, encoding='latin1', engine='python')
 
 def clean_text(text):
     if pd.isna(text):
         return text
 
+    # Decode special characters (already loaded in latin1)
     try:
         text = text.encode('latin1').decode('utf-8')
     except:
         pass
 
-    # Replace weird characters like Ã¢â,-A" with a space
-    text = re.sub(r'[Ã¢â‚¬"”]+', ' ', text)
+    # Replace broken encoding symbols like Ã¢â‚¬ with a space
+    text = re.sub(r'[Ã¢â‚¬]+', ' ', text)
 
-    # Remove greetings like "hi", "hello", "hi team"
+    # Remove greetings (hi, hello, hi team)
     text = re.sub(r'\b(hi|hello|hi team)\b[\s,.:;!?]*', '', text, flags=re.IGNORECASE)
 
-    # Remove 'Description:' prefix
+    # Remove "Description:" tag
     text = re.sub(r'Description:\s*', '', text, flags=re.IGNORECASE)
 
-    # Remove quotes and special character variants (single and double)
+    # Remove quotation/special characters: “ ” ’ ‘ " '
     text = re.sub(r'[\"\'’“”`]', '', text)
 
-    # Flatten multi-line (emails, etc.) to a single line
+    # Replace newlines inside text with a space to flatten emails into single line
     text = text.replace('\n', ' ').replace('\r', ' ')
 
-    # Remove extra/multiple spaces
+    # Remove extra multiple spaces
     text = re.sub(r'\s+', ' ', text)
 
     return text.strip()
 
-# Apply to the column containing text (replace 'DTS Data' with actual column name)
+# Apply cleaning to a specific column (replace 'DTS Data' if your column has a different name)
 df['DTS Data'] = df['DTS Data'].apply(clean_text)
 
-# Save to TSV (or use .csv if preferred)
-df.to_csv('DTS_FileVerification_Cleaned.tsv', sep='\t', index=False)
+# Save the result to a cleaned CSV or TSV (use .tsv for TSV)
+df.to_csv('DTS_FileVerification_Cleaned.csv', index=False)
