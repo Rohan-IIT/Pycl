@@ -1,0 +1,34 @@
+import pandas as pd
+import re
+
+# Load your CSV
+df = pd.read_csv('DTS FileVerification.csv')
+
+def clean_text(text):
+    if pd.isna(text):
+        return text
+
+    try:
+        text = text.encode('latin1').decode('utf-8')
+    except:
+        pass
+
+    # Replace weird characters like Ã¢â,-A" with a space
+    text = re.sub(r'[Ã¢â‚¬"”]+', ' ', text)
+
+    # Remove 'Description:' prefix
+    text = re.sub(r'Description:\s*', '', text, flags=re.IGNORECASE)
+
+    # Flatten multi-line (emails, etc.) to a single line
+    text = text.replace('\n', ' ').replace('\r', ' ')
+
+    # Remove extra multiple spaces
+    text = re.sub(r'\s+', ' ', text)
+
+    return text.strip()
+
+# Apply to your column (e.g., 'DTS Data')
+df['DTS Data'] = df['DTS Data'].apply(clean_text)
+
+# Save to a TSV (or CSV if you prefer)
+df.to_csv('DTS_FileVerification_Cleaned.tsv', sep='\t', index=False)
